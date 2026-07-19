@@ -150,7 +150,7 @@ def main():
     # ----------------------------------------------------
     slide3 = prs.slides.add_slide(blank_layout)
     set_slide_background(slide3)
-    add_header(slide3, "System Architecture & Tier Flow")
+    add_header(slide3, "Core Architecture & Tech Stack (How it Works)")
 
     tiers = [
         {"title": "1. FRONTEND TIER", "tech": "React + Vite + Tailwind", "desc": "Handles interactive dashboard rendering, Recharts visualization, dynamic QR downloads, and authentication forms."},
