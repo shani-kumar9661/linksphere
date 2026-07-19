@@ -1,0 +1,140 @@
+name: LinkSphere CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-and-build:
+    name: Run Tests & Build Assets
+    runs-on: ubuntu-latest
+
+    services:
+      # Optional: In case real integration tests are run in CI, spin up services.
+      # (Note: Current integration tests are mocked, so this is illustrative and future-proof).
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+      redis:
+        image: redis:7.2-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+
+      # --- BACKEND PIPELINE ---
+      - name: Install Backend Dependencies
+        run: |
+          cd server
+          npm ci
+
+      - name: Run Backend Tests
+        run: |
+          cd server
+          npm test
+        env:
+          NODE_ENV: test
+          MONGODB_URI: mongodb://localhost:27017/linksphere_test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test_jwt_secret_must_be_long_enough_to_be_secure_12345
+          JWT_REFRESH_SECRET: test_jwt_refresh_secret_must_be_long_enough_to_be_secure_67890
+
+      # --- FRONTEND PIPELINE ---
+      - name: Install Frontend Dependencies
+        run: |
+          cd client
+          npm ci
+
+      - name: Run Frontend Component Tests
+        run: |
+          cd client
+          npm run test
+
+      - name: Build Frontend Application
+        run: |
+          cd client
+          npm run build
+
+  docker-build-and-push:
+    name: Build & Push Docker Images
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: actions/setup-qemu-action@v3
+        
+      - name: Set up Docker Buildx
+        uses: actions/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Server Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./server
+          file: ./server/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/linksphere-server:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/linksphere-server:${{ github.sha }}
+
+      - name: Build and Push Client Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./client
+          file: ./client/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/linksphere-client:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/linksphere-client:${{ github.sha }}
+
+  deploy:
+    name: Deploy to Production
+    needs: docker-build-and-push
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+
+    steps:
+      - name: Deploy Announcement
+        run: |
+          echo "================================================================"
+          echo "   TRIGGERING DEPLOYMENT FOR LinkSphere Platform                "
+          echo "   Revision: ${{ github.sha }}                                 "
+          echo "================================================================"
+          echo "For actual environment deployment, configure SSH secrets:"
+          echo "e.g. SSH_HOST, SSH_USER, SSH_KEY to run a remote deploy command."
+
+      # Example template of SSH remote deployment (commented out until user provides secrets)
+      # - name: Executing remote ssh commands to deploy
+      #   uses: appleboy/ssh-action@master
+      #   with:
+      #     host: ${{ secrets.SSH_HOST }}
+      #     username: ${{ secrets.SSH_USER }}
+      #     key: ${{ secrets.SSH_KEY }}
+      #     script: |
+      #       cd /opt/linksphere
+      #       docker compose pull
+      #       docker compose up -d --remove-orphans

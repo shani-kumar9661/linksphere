@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/v1/:path*",
+      "destination": "https://linksphere-api.onrender.com/api/v1/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://linksphere-api.onrender.com/health"
+    },
+    {
+      "source": "/(login|register|dashboard|settings|profile|p/[a-zA-Z0-9_-]+)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/:shortCode([a-zA-Z0-9_-]{4,15})",
+      "destination": "https://linksphere-api.onrender.com/:shortCode"
+    },
+    {
+      "source": "/((?!assets|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg).*\\..*)",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -1,0 +1,186 @@
+{
+  "clientName": "Thunder Client",
+  "collectionName": "LinkSphere API Collection",
+  "dateExported": "2026-07-19T11:00:00.000Z",
+  "version": "1.2",
+  "folders": [
+    {
+      "_id": "folder_auth",
+      "name": "Auth",
+      "containerId": ""
+    },
+    {
+      "_id": "folder_urls",
+      "name": "URLs",
+      "containerId": ""
+    },
+    {
+      "_id": "folder_system",
+      "name": "System",
+      "containerId": ""
+    }
+  ],
+  "requests": [
+    {
+      "_id": "req_register",
+      "containerId": "folder_auth",
+      "name": "Register User",
+      "url": "{{baseUrl}}/auth/register",
+      "method": "POST",
+      "sortNum": 10000,
+      "headers": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Password123!\"\n}"
+      }
+    },
+    {
+      "_id": "req_login",
+      "containerId": "folder_auth",
+      "name": "Login User",
+      "url": "{{baseUrl}}/auth/login",
+      "method": "POST",
+      "sortNum": 20000,
+      "headers": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"email\": \"testuser@example.com\",\n  \"password\": \"Password123!\"\n}"
+      }
+    },
+    {
+      "_id": "req_me",
+      "containerId": "folder_auth",
+      "name": "Get Profile",
+      "url": "{{baseUrl}}/auth/me",
+      "method": "GET",
+      "sortNum": 30000,
+      "headers": [],
+      "auth": {
+        "type": "bearer",
+        "bearer": "{{accessToken}}"
+      }
+    },
+    {
+      "_id": "req_logout",
+      "containerId": "folder_auth",
+      "name": "Logout User",
+      "url": "{{baseUrl}}/auth/logout",
+      "method": "POST",
+      "sortNum": 40000,
+      "headers": [],
+      "auth": {
+        "type": "bearer",
+        "bearer": "{{accessToken}}"
+      }
+    },
+    {
+      "_id": "req_create_url",
+      "containerId": "folder_urls",
+      "name": "Create Short URL",
+      "url": "{{baseUrl}}/urls",
+      "method": "POST",
+      "sortNum": 50000,
+      "headers": [],
+      "auth": {
+        "type": "bearer",
+        "bearer": "{{accessToken}}"
+      },
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"originalUrl\": \"https://github.com/google\",\n  \"title\": \"Google GitHub\",\n  \"customAlias\": \"my-custom-test-alias\",\n  \"password\": \"optionalPassword123\"\n}"
+      }
+    },
+    {
+      "_id": "req_get_urls",
+      "containerId": "folder_urls",
+      "name": "Get All User URLs",
+      "url": "{{baseUrl}}/urls",
+      "method": "GET",
+      "sortNum": 60000,
+      "headers": [],
+      "auth": {
+        "type": "bearer",
+        "bearer": "{{accessToken}}"
+      }
+    },
+    {
+      "_id": "req_get_url",
+      "containerId": "folder_urls",
+      "name": "Get URL Details",
+      "url": "{{baseUrl}}/urls/url_id_here",
+      "method": "GET",
+      "sortNum": 70000,
+      "headers": [],
+      "auth": {
+        "type": "bearer",
+        "bearer": "{{accessToken}}"
+      }
+    },
+    {
+      "_id": "req_update_url",
+      "containerId": "folder_urls",
+      "name": "Update URL Settings",
+      "url": "{{baseUrl}}/urls/url_id_here",
+      "method": "PATCH",
+      "sortNum": 80000,
+      "headers": [],
+      "auth": {
+        "type": "bearer",
+        "bearer": "{{accessToken}}"
+      },
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"title\": \"Updated Google GitHub\",\n  \"customAlias\": \"my-custom-test-alias-updated\",\n  \"password\": \"newPassword123\"\n}"
+      }
+    },
+    {
+      "_id": "req_delete_url",
+      "containerId": "folder_urls",
+      "name": "Delete URL",
+      "url": "{{baseUrl}}/urls/url_id_here",
+      "method": "DELETE",
+      "sortNum": 90000,
+      "headers": [],
+      "auth": {
+        "type": "bearer",
+        "bearer": "{{accessToken}}"
+      }
+    },
+    {
+      "_id": "req_verify_password",
+      "containerId": "folder_urls",
+      "name": "Verify URL Password",
+      "url": "{{baseUrl}}/urls/verify-password/short_code_here",
+      "method": "POST",
+      "sortNum": 100000,
+      "headers": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"password\": \"optionalPassword123\"\n}"
+      }
+    },
+    {
+      "_id": "req_health",
+      "containerId": "folder_system",
+      "name": "Get Health Check",
+      "url": "{{baseUrl}}/health",
+      "method": "GET",
+      "sortNum": 110000,
+      "headers": []
+    }
+  ],
+  "settings": {
+    "headers": [],
+    "options": {},
+    "envVariables": [
+      {
+        "name": "baseUrl",
+        "value": "http://localhost:5000/api/v1"
+      },
+      {
+        "name": "accessToken",
+        "value": ""
+      }
+    ]
+  }
+}
