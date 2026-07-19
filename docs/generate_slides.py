@@ -3,6 +3,7 @@ from pptx import Presentation
 from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
+from pptx.enum.shapes import MSO_SHAPE
 
 def main():
     prs = Presentation()
@@ -152,42 +153,78 @@ def main():
     set_slide_background(slide3)
     add_header(slide3, "Core Architecture & Tech Stack (How it Works)")
 
-    tiers = [
-        {"title": "1. FRONTEND TIER", "tech": "React + Vite + Tailwind", "desc": "Handles interactive dashboard rendering, Recharts visualization, dynamic QR downloads, and authentication forms."},
-        {"title": "2. GATEWAY PROXY", "tech": "Vercel Engine / Nginx", "desc": "Manages route rewriting, proxying client API calls to backend without CORS errors, and securing SSL/TLS termination."},
-        {"title": "3. BACKEND API TIER", "tech": "Node.js + Express.js", "desc": "MVC architecture processing link creation, device/browser metadata parsing, JWT verification, and background jobs."},
-        {"title": "4. DATABASE & CACHE", "tech": "MongoDB + Upstash Redis", "desc": "MongoDB stores persistent data (Users, Links, Clicks). Redis acts as memory cache for hot redirection and rate-limiter storage."}
-    ]
-
-    for i, t in enumerate(tiers):
-        x = Inches(0.8 + i * 2.95)
-        box = slide3.shapes.add_textbox(x, Inches(1.8), Inches(2.8), Inches(4.8))
-        tf = box.text_frame
+    # Function to draw a clean node box
+    def draw_node(slide, text, x, y, w, h, border_color):
+        shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, x, y, w, h)
+        shape.fill.solid()
+        shape.fill.fore_color.rgb = RGBColor(30, 41, 59) # Slate 800
+        shape.line.color.rgb = border_color
+        shape.line.width = Pt(1.5)
+        
+        tf = shape.text_frame
         tf.word_wrap = True
-        
-        p_t = tf.paragraphs[0]
-        p_t.text = t["title"]
-        p_t.font.name = 'Arial'
-        p_t.font.size = Pt(18)
-        p_t.font.bold = True
-        p_t.font.color.rgb = ACCENT_BLUE
-        p_t.space_after = Pt(8)
-        
-        p_tech = tf.add_paragraph()
-        p_tech.text = t["tech"]
-        p_tech.font.name = 'Arial'
-        p_tech.font.size = Pt(14)
-        p_tech.font.italic = True
-        p_tech.font.bold = True
-        p_tech.font.color.rgb = LIGHT_TEXT
-        p_tech.space_after = Pt(12)
-        
-        p_desc = tf.add_paragraph()
-        p_desc.text = t["desc"]
-        p_desc.font.name = 'Arial'
-        p_desc.font.size = Pt(13)
-        p_desc.font.color.rgb = MUTED_TEXT
-        p_desc.space_after = Pt(8)
+        p = tf.paragraphs[0]
+        p.text = text
+        p.font.name = 'Arial'
+        p.font.size = Pt(13)
+        p.font.bold = True
+        p.font.color.rgb = LIGHT_TEXT
+        p.alignment = PP_ALIGN.CENTER
+        return shape
+
+    def draw_arrow(slide, arrow_shape, x, y, w, h):
+        arrow = slide.shapes.add_shape(arrow_shape, x, y, w, h)
+        arrow.fill.solid()
+        arrow.fill.fore_color.rgb = MUTED_TEXT
+        arrow.line.fill.background()
+
+    # Draw Nodes on Left Side
+    # 1. Frontend Client
+    draw_node(slide3, "🔗 Vite + React UI\n(Frontend Client)", Inches(0.8), Inches(2.2), Inches(2.2), Inches(1.0), LIGHT_TEXT)
+    # 2. Vercel Gateway Proxy
+    draw_node(slide3, "🛡️ Vercel Proxy\n(Rewrite Gateway)", Inches(3.8), Inches(2.2), Inches(2.2), Inches(1.0), ACCENT_BLUE)
+    # 3. Backend REST API
+    draw_node(slide3, "⚙️ Node + Express\n(Backend REST API)", Inches(3.8), Inches(4.0), Inches(2.2), Inches(1.0), ACCENT_BLUE)
+    # 4. MongoDB Database
+    draw_node(slide3, "🍃 MongoDB Atlas\n(Document Store)", Inches(1.5), Inches(5.8), Inches(2.2), Inches(1.0), RGBColor(16, 185, 129)) # Emerald 500
+    # 5. Upstash Redis
+    draw_node(slide3, "🔴 Upstash Redis\n(Serverless Cache)", Inches(4.5), Inches(5.8), Inches(2.2), Inches(1.0), RED_ACCENT)
+
+    # Draw arrows
+    # Frontend -> Gateway
+    draw_arrow(slide3, MSO_SHAPE.RIGHT_ARROW, Inches(3.15), Inches(2.55), Inches(0.5), Inches(0.3))
+    # Gateway -> Backend
+    draw_arrow(slide3, MSO_SHAPE.DOWN_ARROW, Inches(4.75), Inches(3.35), Inches(0.3), Inches(0.5))
+    # Backend -> MongoDB (pointing down-leftish)
+    draw_arrow(slide3, MSO_SHAPE.DOWN_ARROW, Inches(2.45), Inches(5.15), Inches(0.3), Inches(0.5))
+    # Backend -> Redis (pointing down-rightish)
+    draw_arrow(slide3, MSO_SHAPE.DOWN_ARROW, Inches(5.45), Inches(5.15), Inches(0.3), Inches(0.5))
+
+    # Add Text description on Right Side
+    desc_box = slide3.shapes.add_textbox(Inches(7.2), Inches(1.8), Inches(5.3), Inches(5.0))
+    tf_desc = desc_box.text_frame
+    tf_desc.word_wrap = True
+    
+    p_h = tf_desc.paragraphs[0]
+    p_h.text = "⚙️ DECOUPLED DATA FLOW"
+    p_h.font.name = 'Arial'
+    p_h.font.size = Pt(20)
+    p_h.font.bold = True
+    p_h.font.color.rgb = ACCENT_BLUE
+    p_h.space_after = Pt(14)
+
+    flow_bullets = [
+        "Vercel Edge Proxy handles SSL and rewrites client requests starting with /api/v1 to the Render URL, completely resolving CORS restrictions.",
+        "Node API queries MongoDB Atlas only for cold requests; popular shortened links are served directly from Upstash Redis to keep latency sub-2ms.",
+        "Visitor metadata (Browser, OS, referral source) is parsed out of the request headers and saved asynchronously to the MongoDB Click analytics collection."
+    ]
+    for b in flow_bullets:
+        p = tf_desc.add_paragraph()
+        p.text = "•  " + b
+        p.font.name = 'Arial'
+        p.font.size = Pt(15)
+        p.font.color.rgb = LIGHT_TEXT
+        p.space_after = Pt(12)
 
 
     # ----------------------------------------------------
